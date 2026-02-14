@@ -29,6 +29,7 @@ def create_lobby(message):
     lobbies[lobby_key] = {
         "creator": user_id,
         "players": [user_id],
+        "player_names": {user_id: message.from_user.first_name},
         "theme": None,
         "current_word": None,
         "spy": None,
@@ -54,7 +55,16 @@ def join_lobby(message):
         bot.reply_to(message, "Вы уже в лобби.")
         return
     lobbies[key]["players"].append(user_id)
+    lobbies[key]["player_names"][user_id] = message.from_user.first_name
     bot.reply_to(message, f"Вы присоединились к лобби {key}")
+    
+    # Отправляем сообщение всем игрокам о новом участнике
+    player_list = "\n".join([f"- {name}" for name in lobbies[key]["player_names"].values()])
+    for player_id in lobbies[key]["players"]:
+        try:
+            bot.send_message(player_id, f"К лобби присоединился новый игрок: {message.from_user.first_name}\n\nТекущие игроки:\n{player_list}")
+        except:
+            pass
 
 @bot.message_handler(commands=['start_game'])
 def start_game(message):
